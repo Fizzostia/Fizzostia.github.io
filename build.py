@@ -148,6 +148,7 @@ def page(path, title, desc, body, nav_here="", noindex=False):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
 <title>{title}</title>
 <meta name="description" content="{desc}">
 {robots}<link rel="canonical" href="{BASE}{path if path != 'index.html' else ''}">

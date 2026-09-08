@@ -1,8 +1,48 @@
 /* Fizzostia, studio site
-   Light by default, dark by preference or explicit choice. Every color is a token
-   declared on :root first, so the un-stamped system state resolves correctly. */
+   Dark first. The bare :root carries the complete dark palette, so the un-stamped
+   system state (most viewers) gets dark. A viewer who explicitly prefers light, or
+   stamps data-theme="light", gets the light set instead. Every color is a token
+   declared on :root before any override redefines it. */
 
 :root{
+  --ground:#0B0C10;
+  --surface:#13161D;
+  --surface-2:#1A1E27;
+  --line:#282D38;
+  --line-soft:#20242D;
+  --ink:#EDF0F5;
+  --ink-2:#B5BCC9;
+  --muted:#848D9D;
+  --accent:#FF8A32;
+  --accent-soft:rgba(255,138,50,.13);
+  --link:#6FB0FF;
+  --good:#3ECF9A;
+
+  --f-display:"Archivo Black","Arial Black",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",Helvetica,Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+
+  --wrap:1000px;
+  --pad:clamp(18px,4.5vw,40px);
+}
+
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --ground:#F2F4F7;
+    --surface:#FFFFFF;
+    --surface-2:#E9ECF1;
+    --line:#D5DAE2;
+    --line-soft:#E4E8EE;
+    --ink:#14171D;
+    --ink-2:#454C58;
+    --muted:#6B7382;
+    --accent:#D14C05;
+    --accent-soft:rgba(209,76,5,.10);
+    --link:#1355C4;
+    --good:#137A52;
+  }
+}
+:root[data-theme="light"]{
   --ground:#F2F4F7;
   --surface:#FFFFFF;
   --surface-2:#E9ECF1;
@@ -15,44 +55,6 @@
   --accent-soft:rgba(209,76,5,.10);
   --link:#1355C4;
   --good:#137A52;
-
-  --f-display:"Archivo Black","Arial Black",system-ui,sans-serif;
-  --f-body:"IBM Plex Sans","Segoe UI",Helvetica,Arial,sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
-
-  --wrap:1000px;
-  --pad:clamp(18px,4.5vw,40px);
-}
-
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --ground:#0B0C10;
-    --surface:#13161D;
-    --surface-2:#1A1E27;
-    --line:#282D38;
-    --line-soft:#20242D;
-    --ink:#EDF0F5;
-    --ink-2:#B5BCC9;
-    --muted:#848D9D;
-    --accent:#FF8A32;
-    --accent-soft:rgba(255,138,50,.13);
-    --link:#6FB0FF;
-    --good:#3ECf9A;
-  }
-}
-:root[data-theme="dark"]{
-  --ground:#0B0C10;
-  --surface:#13161D;
-  --surface-2:#1A1E27;
-  --line:#282D38;
-  --line-soft:#20242D;
-  --ink:#EDF0F5;
-  --ink-2:#B5BCC9;
-  --muted:#848D9D;
-  --accent:#FF8A32;
-  --accent-soft:rgba(255,138,50,.13);
-  --link:#6FB0FF;
-  --good:#3ECf9A;
 }
 
 *{box-sizing:border-box}
