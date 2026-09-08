@@ -65,9 +65,16 @@ GAMES = [
       "<b>Accolades and rivalries.</b> Every hit, jump, dash, slam and meter traveled is tracked, "
       "and the game works out who your rival is from how often you two keep crashing into each other.",
     ],
-    shots=[("recharged-koth.jpg", "King of the Hill. The zone moves, and everyone has noticed."),
+    shots=[("recharged-race.jpg", "Race, lining up the loop with two bombs already in the air."),
+           ("recharged-koth.jpg", "King of the Hill. The zone moves, and everyone has noticed."),
+           ("recharged-infection.jpg", "Infection. Ten alive, and the whole control scheme sits in "
+            "the bottom right corner."),
+           ("recharged-capturecore.jpg", "Capture the Core, where one dedicated slammer ruins an "
+            "entire strategy."),
+           ("recharged-capturecore-wide.jpg", "The same fight from further out, with the goal at "
+            "the far end."),
            ("recharged-lobby.jpg", "A full sixteen-bot match, every seat filled."),
-           ("recharged-race.jpg", "Race, lining up the loop with two bombs already in the air.")],
+           ("recharged-arena-topdown.jpg", "An arena from directly above.")],
   ),
   dict(
     slug="glingdom", title="Glingdom", app="2935750",
