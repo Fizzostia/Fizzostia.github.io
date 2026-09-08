@@ -13,6 +13,25 @@ PITCH_SLUG = "pitch/recharged-9c41f7ab"
 
 STEAM = "https://store.steampowered.com/app/"
 
+# Channels shown on the contact page.
+#   live=False keeps a row out of the built HTML. Use it for anything not yet confirmed:
+#   a wrong handle on a public contact page sends press to a stranger, so confirm first,
+#   then flip the flag and rerun the build.
+SOCIALS = [
+  dict(live=True,  label="Email", handle=EMAIL, url="mailto:" + EMAIL, primary=True,
+       note="The fastest way to reach us, and the one we actually check. Press, publishers, "
+            "creators, key requests, bug reports, all of it."),
+  dict(live=True,  label="Discord", handle="discord.gg/cdSTbrM", url=DISCORD, primary=False,
+       note="The community server. Patch notes land here first, and it is the best place to "
+            "find people to play RoboSquare with."),
+  dict(live=False, label="YouTube", handle="", url="", primary=False,
+       note="Trailers and devlogs."),
+  dict(live=False, label="Twitter / X", handle="", url="", primary=False,
+       note="Short updates and work in progress."),
+  dict(live=False, label="Reddit", handle="", url="", primary=False,
+       note="Devlogs and longer posts."),
+]
+
 GAMES = [
   dict(
     slug="robosquare-recharged", title="RoboSquare: Recharged", app="4088870",
@@ -171,7 +190,7 @@ def page(path, title, desc, body, nav_here="", noindex=False):
       <a href="{up}index.html"{cur('home')}>Studio</a>
       <a href="{up}games.html"{cur('games')}>Games</a>
       <a href="{up}press/index.html"{cur('press')}>Press</a>
-      <a href="mailto:{EMAIL}">Contact</a>
+      <a href="{up}contact.html"{cur('contact')}>Contact</a>
     </nav>
   </div>
 </header>
@@ -408,6 +427,63 @@ for g in GAMES:
 print("built:", ", ".join(sorted(
     os.path.join(r, f).replace("\\", "/") for r, _, fs in os.walk(".")
     for f in fs if f.endswith(".html") and "pitch" not in r)))
+
+
+# ---------------------------------------------------------------- contact
+rows = []
+for c in SOCIALS:
+    if not c["live"]:
+        continue
+    link = f'<a href="{c["url"]}">{c["handle"]}</a>'
+    rows.append(f"""        <div class="channel{' primary' if c['primary'] else ''}">
+          <h2>{c['label']}</h2>
+          <p class="channel-handle">{link}</p>
+          <p>{c['note']}</p>
+        </div>""")
+channels = chr(10).join(rows)
+
+page("contact.html", "Contact Fizzostia",
+     "How to reach Fizzostia: email, Discord and socials. Press keys, coverage "
+     "permission and publisher enquiries all go to the same inbox.",
+     f"""    <div class="stack">
+      <section class="stack-tight">
+        <span class="eyebrow">Two people, one inbox</span>
+        <h1>Contact</h1>
+        <p class="lede">There is no support desk and no press agency. Everything below reaches
+          the people who make the games, so you will get a real answer rather than a form
+          response.</p>
+      </section>
+
+      <section class="stack-tight">
+        <h3>Where to find us</h3>
+        <div class="channels">
+{channels}
+        </div>
+      </section>
+
+      <hr class="rule">
+
+      <section class="cols">
+        <div class="prose">
+          <h2>Press and creators</h2>
+          <p>There are <a href="press/index.html">press kits</a> for every game, with fact sheets,
+            descriptions and links. If you need something that is not on them, a key, a build, raw
+            capture, logos or a specific screenshot, email and say what you are working on.</p>
+          <p><strong>You do not need permission to cover our games.</strong> Use any screenshots,
+            footage or trailer material in videos, articles and streams, including monetized ones.
+            No need to ask first.</p>
+        </div>
+        <div class="prose">
+          <h2>Publishers and business</h2>
+          <p>Publisher, porting and platform enquiries go to the same address. Say which game and
+            what you have in mind, and you will get a straight answer about whether it is a fit.</p>
+          <h2>Bugs and support</h2>
+          <p>Discord is faster than email for anything broken in a live game, because other players
+            are usually there too. Email works if you would rather not join a server.</p>
+        </div>
+      </section>
+
+    </div>""", nav_here="contact")
 
 
 # ---------------------------------------------------------------- hidden pitch deck
