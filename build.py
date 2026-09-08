@@ -65,9 +65,9 @@ GAMES = [
       "<b>Accolades and rivalries.</b> Every hit, jump, dash, slam and meter traveled is tracked, "
       "and the game works out who your rival is from how often you two keep crashing into each other.",
     ],
-    shots=[("recharged-koth.jpg", "King of the Hill on Revolution. The zone moves."),
+    shots=[("recharged-koth.jpg", "King of the Hill. The zone moves, and everyone has noticed."),
            ("recharged-lobby.jpg", "A full sixteen-bot match, every seat filled."),
-           ("recharged-race.jpg", "Race, mid-pack and about to go badly.")],
+           ("recharged-race.jpg", "Race, lining up the loop with two bombs already in the air.")],
   ),
   dict(
     slug="glingdom", title="Glingdom", app="2935750",
