@@ -9,7 +9,14 @@ VERIFIED = "7 September 2026"
 BASE = "https://fizzostia.github.io/"
 EMAIL = "fizzostia@gmail.com"
 DISCORD = "https://discord.gg/cdSTbrM"
-PITCH_SLUG = "pitch/recharged-9c41f7ab"
+# Unlisted publisher pitches, one per publisher. Each slug is random so it can't be guessed;
+# /pitch/ is noindex, disallowed in robots.txt and linked from nowhere on the site.
+DECKS = "../RoboSquare-2/Marketing/press-kit/"
+PITCHES = [
+  dict(src=DECKS + "pitch-deck-aggro-crab.html", slug="pitch/recharged-9c41f7ab"),
+  dict(src=DECKS + "pitch-deck-tark.html", slug="pitch/recharged-59ac3f29"),
+  dict(src=DECKS + "pitch-deck-generic.html", slug="pitch/recharged-cfec5580"),
+]
 
 STEAM = "https://store.steampowered.com/app/"
 
@@ -493,10 +500,9 @@ page("contact.html", "Contact Fizzostia",
     </div>""", nav_here="contact")
 
 
-# ---------------------------------------------------------------- hidden pitch deck
-# The deck is authored as a fragment (it doubles as a Claude artifact, where the host
+# ---------------------------------------------------------------- hidden pitch decks
+# Each deck is authored as a fragment (it doubles as a Claude artifact, where the host
 # supplies the doctype and head). Wrap it for a real static host here.
-DECK_SRC = "../RoboSquare-2/Marketing/press-kit/pitch-deck-aggro-crab.html"
 
 def build_pitch(src, out_dir, base_url):
     frag = io.open(src, encoding="utf-8").read()
@@ -506,7 +512,7 @@ def build_pitch(src, out_dir, base_url):
     for l in links:
         frag = frag.replace(l, "", 1)
     desc = ("Publishing pitch for RoboSquare: Recharged, a 16-player online party game about "
-            "hovering robots. Five modes, fourteen arenas, deterministic rollback netcode, built solo.")
+            "hovering robots. Five modes, deterministic rollback netcode, built solo.")
     head = f"""<!doctype html>
 <html lang="en">
 <head>
@@ -533,8 +539,9 @@ def build_pitch(src, out_dir, base_url):
     io.open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8", newline="\n").write(
         head + frag.strip() + "\n</body>\n</html>\n")
 
-if os.path.exists(DECK_SRC):
-    build_pitch(DECK_SRC, os.path.join(*PITCH_SLUG.split("/")), BASE + PITCH_SLUG + "/")
-    print("pitch:", BASE + PITCH_SLUG + "/")
-else:
-    print("pitch SKIPPED, deck not found at", DECK_SRC)
+for p in PITCHES:
+    if os.path.exists(p["src"]):
+        build_pitch(p["src"], os.path.join(*p["slug"].split("/")), BASE + p["slug"] + "/")
+        print("pitch:", BASE + p["slug"] + "/")
+    else:
+        print("pitch SKIPPED, deck not found at", p["src"])
