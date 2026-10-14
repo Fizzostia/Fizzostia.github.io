@@ -2,8 +2,11 @@
 
 Every fact here is verified against the live Steam pages or, for RoboSquare: Recharged,
 against RoboSquare-2/Marketing/BRAND.md. Verification date in VERIFIED below.
+
+python build.py --pack also rebuilds each game's downloadable asset pack (see PACKS), pulling
+files from the game repo and the live Steam screenshots. Without it the existing zip is kept.
 """
-import io, os, re, shutil
+import io, json, os, re, shutil, sys, urllib.request, zipfile
 
 VERIFIED = "7 September 2026"
 BASE = "https://fizzostia.github.io/"
@@ -19,6 +22,49 @@ PITCHES = [
 ]
 
 STEAM = "https://store.steampowered.com/app/"
+GAME_REPO = "../RoboSquare-2/"
+
+# Downloadable asset packs, keyed by game slug. `files` are (source in the game repo, path in
+# the zip). Every image here was checked by eye for the pre-2026-10-03 mode names (Race, Sumo,
+# King of the Hill, Infection) and their HUDs; anything showing them stays out. The live Steam
+# screenshots are fetched at pack time, minus `steam_skip` (by screenshot hash), so a new
+# store screenshot needs the same check before the next --pack.
+_BR = "Assets/Textures/Branding/"
+_PK = "Marketing/press-kit/assets/"
+PACKS = {
+  "robosquare-recharged": dict(
+    zip="assets/press/robosquare-recharged-press-kit.zip",
+    root="RoboSquare-Recharged-press-kit/",
+    logo=(_BR + "RoboSquare Recharged-trans.png", "assets/press/robosquare-recharged-logo.png"),
+    trailer="https://www.youtube.com/watch?v=IwYbY9rcp_4",
+    app="4088870",
+    # ss_13b237c1...: the Infection HUD ("Infected", "Hunt down the survivors").
+    steam_skip={"13b237c13879673d7dea651b1b01984aef158077"},
+    files=[
+      (_BR + "RoboSquare Recharged-trans.png", "logos/robosquare-recharged-logo.png"),
+      (_BR + "RoboSquare Recharged-trans-nodropshadow.png", "logos/robosquare-recharged-logo-no-shadow.png"),
+      (_BR + "RoboSquare Recharged.png", "logos/robosquare-recharged-logo-on-black.png"),
+      (_BR + "RoboSquareIcon-trans.png", "logos/robosquare-recharged-icon.png"),
+      (_BR + "RoboSquareIcon-trans-nodropshadow.png", "logos/robosquare-recharged-icon-no-shadow.png"),
+      (_BR + "RoboSquareIcon.png", "logos/robosquare-recharged-icon-on-black.png"),
+      (_BR + "Fizzostia_logo-trans.png", "logos/fizzostia-logo.png"),
+      (_BR + "Fizzostia-title-combined-trans.png", "logos/fizzostia-wordmark.png"),
+      (_BR + "SteamPictures/SteamStorePageV2/HeaderCapsule.png", "store-art/header-capsule-920x430.png"),
+      (_BR + "SteamPictures/SteamStorePageV2/MainCapsule.png", "store-art/main-capsule-1232x706.png"),
+      (_BR + "SteamPictures/SteamStorePageV2/SmallCapsule.png", "store-art/small-capsule-462x174.png"),
+      (_BR + "SteamPictures/SteamStorePageV2/Vertical Capsule.png", "store-art/vertical-capsule-748x896.png"),
+      (_PK + "gif-capture-the-core.gif", "gifs/capture-the-core.gif"),
+      (_PK + "gif-customization-wall.gif", "gifs/customization-wall.gif"),
+      (_PK + "gif-race-pack.gif", "gifs/delivery-race-pack.gif"),
+    ] + [(_PK + "ctc-stills/" + f, "screenshots/capture-the-core/" + f) for f in (
+      "01-bomb-brawl.jpg", "02-arena-overview.jpg", "03-bomb-blast.jpg", "04-repair-drones.jpg",
+      "05-honeycomb-shield.jpg", "06-goal-scrum.jpg", "07-rival-crowd.jpg")
+    ] + [(_PK + "drone-stills/" + f, "screenshots/repair-drones/" + f) for f in (
+      "01-crossed-beams.jpg", "02-staring-drone.jpg", "03-overhead-scan.jpg", "04-two-watching.jpg",
+      "05-eye-beam-profile.jpg", "06-eye-closeup.jpg", "07-two-hovering.jpg", "08-low-angle-scan.jpg",
+      "09-perched-pillar.jpg", "10-floor-sweep.jpg", "11-big-drone-rear.jpg", "12-arena-wide.jpg")],
+  ),
+}
 
 # Channels shown on the contact page.
 #   live=False keeps a row out of the built HTML. Use it for anything not yet confirmed:
@@ -46,41 +92,59 @@ GAMES = [
     status=("now", "Coming Q1 2027"),
     meta="PC, Steam &middot; $5.99 USD &middot; Not Early Access",
     blurb="An online multiplayer party game about hovering robots and the appalling things they "
-          "do to each other. Sixteen players, five randomly chosen minigames back to back, and one "
-          "champion at the end. The empty seats fill themselves, so a full sixteen-bot brawl is "
-          "always one click away.",
+          "do to each other. Sixteen players, five randomly chosen minigames back to back, and "
+          "every round pays into your bot's vault. The biggest vault after five rounds wins.",
+    # Arenas: 17 in the rotation (MinigameMapsConfig), checked 2026-10-14. Six more are built
+    # but wait on the developer's playtest; BRAND.md says keep quoting 17 until they are kept.
     facts=[("Release", "<b>Q1 2027</b>"), ("Price", "<b>$5.99 USD</b>, premium, not Early Access"),
            ("Platform", "PC (Windows, Steam)"), ("Players", "Up to 16 online"),
-           ("Modes", "5: Race, Sumo, King of the Hill, Infection, Capture the Core"),
-           ("Arenas", "14"), ("Chaos events", "8, fired mid-round without warning"),
+           ("Modes", "5: Delivery Race, Vault Raid, Heist, Hold The Bag, Capture the Core"),
+           ("Scoring", "Money. Everything a bot earns goes into its vault, which carries through "
+                       "the whole match. The biggest vault after five rounds wins."),
+           ("Arenas", "17 across the five modes"),
+           ("Chaos events", "8, fired mid-round without warning"),
            ("Engine", "Unity with Photon Quantum 3 deterministic rollback netcode"),
            ("Input", "Full controller support (Xbox, DualShock, DualSense) and keyboard"),
-           ("Languages", "English plus 30 others"),
-           ("Steam features", "Achievements, global leaderboards, Cloud, HDR, Family Sharing"),
+           ("Steam features", "Achievements, global leaderboards, Cloud, Family Sharing"),
            ("Developer", "Fizz, working solo on this game")],
+    modes=[
+      ("Delivery Race", "Every checkpoint is a drop-off and every drop-off pays. Take them in any "
+       "order you like. The golden crate at the finish only opens once the rest are delivered."),
+      ("Vault Raid", "Knock a bot off the platform and a cut of everything it has earned leaves "
+       "with you. The platform is smaller than you think and your friends are worse than you "
+       "remember."),
+      ("Heist", "A bank truck is driving around the arena with the round's money in it. Stay close "
+       "and it pays out, and the fewer bots sharing, the bigger the cut. It does not stop for "
+       "anyone."),
+      ("Hold The Bag", "A few bots are holding bags that pay every second. Touch one and the bag "
+       "is yours, along with everyone who was chasing it."),
+      ("Capture the Core", "Team warfare over cores, where one dedicated slammer can ruin an "
+       "entire strategy."),
+    ],
     features=[
       "<b>Sixteen seats, so nobody sits out.</b> Most party games cap at four or eight and somebody "
       "in the group ends up watching. Bring six friends, or twelve, or fifteen.",
+      "<b>Every round pays.</b> All five modes pay into your bot's vault, and the vault carries "
+      "through the match. Get knocked off in Vault Raid and part of it leaves with someone else.",
       "<b>Three verbs, endless mess.</b> Jump, Dash, Slam. Momentum is your best weapon and your "
       "worst habit.",
       "<b>Eight chaos events fire mid-round, unannounced.</b> Wind picks a direction and commits. "
       "Gravity gets lazy. Bombs fall. A UFO helps itself to whoever is winning.",
-      "<b>The lobby is never empty.</b> Any seat nobody is in gets filled, so the game still works "
-      "at 3 am, or a year after launch.",
-      "<b>Deep bot customization.</b> 13 bodies, 6 hover thrusters, 6 finishes, plus body and "
+      "<b>Deep bot customization.</b> 14 bodies, 6 hover thrusters, 6 finishes, plus body and "
       "thruster colors.",
       "<b>Accolades and rivalries.</b> Every hit, jump, dash, slam and meter traveled is tracked, "
       "and the game works out who your rival is from how often you two keep crashing into each other.",
     ],
-    shots=[("recharged-race.jpg", "Race, lining up the loop with two bombs already in the air."),
-           ("recharged-koth.jpg", "King of the Hill. The zone moves, and everyone has noticed."),
-           ("recharged-infection.jpg", "Infection. Ten alive, and the whole control scheme sits in "
-            "the bottom right corner."),
+    shots=[("recharged-race.jpg", "Delivery Race, lining up the loop with two bombs already in "
+            "the air."),
+           ("recharged-heist.jpg", "Heist. The bank truck pays whoever stays close, and it does "
+            "not stop for anyone."),
+           ("recharged-holdthebag.jpg", "Hold The Bag. Touch a gold bot and its money is yours."),
            ("recharged-capturecore.jpg", "Capture the Core, where one dedicated slammer ruins an "
             "entire strategy."),
            ("recharged-capturecore-wide.jpg", "The same fight from further out, with the goal at "
             "the far end."),
-           ("recharged-lobby.jpg", "A full sixteen-bot match, every seat filled."),
+           ("recharged-lobby.jpg", "Sixteen bots on one platform, nobody sitting out."),
            ("recharged-arena-topdown.jpg", "An arena from directly above.")],
   ),
   dict(
@@ -378,9 +442,73 @@ page("press/index.html", "Press Kits",
       </section>
     </div>""", nav_here="press")
 
+# ---------------------------------------------------------------- asset packs
+def build_pack(p):
+    """Writes the zip and the standalone full-res logo. Fixed timestamps keep an unchanged
+    pack byte-identical, so a rebuild with nothing new shows no diff."""
+    os.makedirs(os.path.dirname(p["zip"]), exist_ok=True)
+    shutil.copyfile(GAME_REPO + p["logo"][0], p["logo"][1])
+    entries = [(open(GAME_REPO + src, "rb").read(), dst) for src, dst in p["files"]]
+    api = f"https://store.steampowered.com/api/appdetails?appids={p['app']}&filters=screenshots"
+    shots = json.load(urllib.request.urlopen(api))[p["app"]]["data"]["screenshots"]
+    n = 0
+    for s in shots:
+        url = s["path_full"].split("?")[0]
+        if any(h in url for h in p["steam_skip"]):
+            continue
+        n += 1
+        entries.append((urllib.request.urlopen(url).read(), f"screenshots/steam/steam-{n:02d}.jpg"))
+    with zipfile.ZipFile(p["zip"], "w", zipfile.ZIP_DEFLATED) as z:
+        for data, dst in entries:
+            info = zipfile.ZipInfo(p["root"] + dst, date_time=(2026, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            z.writestr(info, data)
+    print("pack:", p["zip"], len(entries), "files")
+
+if "--pack" in sys.argv:
+    for p in PACKS.values():
+        build_pack(p)
+
+
+def downloads_section(g):
+    p = PACKS.get(g["slug"])
+    if not p:
+        return ""
+    if not (os.path.exists(p["zip"]) and os.path.exists(p["logo"][1])):
+        sys.exit(f"{p['zip']} or its logo is missing: run python build.py --pack")
+    with zipfile.ZipFile(p["zip"]) as z:
+        count = sum(1 for i in z.infolist() if not i.is_dir())
+    mb = os.path.getsize(p["zip"]) / 1e6
+    return f"""
+      <section class="stack-tight" id="downloads">
+        <h3>Downloads</h3>
+        <div class="contact-grid">
+          <div><dt>Logo</dt><dd><a href="../{p['logo'][1]}" download>Transparent PNG</a></dd>
+            <p class="game-meta">1983 &times; 793, full resolution</p></div>
+          <div><dt>Trailer</dt><dd><a href="{p['trailer']}">Watch on YouTube</a></dd>
+            <p class="game-meta">Also on the Steam page</p></div>
+          <div><dt>Asset pack</dt><dd><a href="../{p['zip']}" download>Download zip</a></dd>
+            <p class="game-meta">{count} files, {mb:.0f} MB: logos, store art, GIFs, screenshots</p></div>
+        </div>
+        <p class="game-meta">Free to use for coverage and promotion of {g['title']}. Please credit
+          Fizzostia.</p>
+      </section>"""
+
+
 # ---------------------------------------------------------------- one press kit per game
 for g in GAMES:
     feats = "\n".join(f"        <li>{f}</li>" for f in g["features"])
+    modes = ""
+    if g.get("modes"):
+        items = "\n".join(f"        <li><b>{n}.</b> {d}</li>" for n, d in g["modes"])
+        modes = f"""
+      <section class="stack-tight">
+        <h3>The five modes</h3>
+        <ul class="bullets">
+{items}
+        </ul>
+      </section>
+"""
     shots = ""
     if g["shots"]:
         figs = "\n".join(
@@ -392,8 +520,9 @@ for g in GAMES:
         <div class="shots">
 {figs}
         </div>
-        <p class="game-meta">Full-resolution versions, the trailer and additional captures are
-          available on request.</p>
+        <p class="game-meta">{"Full-resolution versions are in the asset pack below."
+          if g["slug"] in PACKS else
+          "Full-resolution versions, the trailer and additional captures are available on request."}</p>
       </section>"""
 
     page(f"press/{g['slug']}.html", f"{g['title']} Press Kit",
@@ -404,7 +533,8 @@ for g in GAMES:
         <span class="eyebrow">Press kit &middot; {g['status'][1]}</span>
         <h1>{g['title']}</h1>
         <p class="lede">{g['blurb']}</p>
-        <p class="game-links"><a href="{STEAM}{g['app']}/">Steam page</a> &middot;
+        <p class="game-links"><a href="{STEAM}{g['app']}/">Steam page</a> &middot;{
+          chr(10) + '          <a href="#downloads">Downloads</a> &middot;' if g['slug'] in PACKS else ''}
           <a href="mailto:{EMAIL}">Request a key</a> &middot;
           <a href="index.html">All press kits</a></p>
       </section>
@@ -413,14 +543,14 @@ for g in GAMES:
         <h3>Fact sheet</h3>
 {facts_table(g)}
       </section>
-
+{modes}
       <section class="stack-tight">
         <h3>Key features</h3>
         <ul class="bullets">
 {feats}
         </ul>
       </section>
-{shots}
+{shots}{downloads_section(g)}
       <div class="note">
         <b>Coverage permission, granted in advance.</b> Use any screenshots, footage or trailer
         material from {g['title']} in videos, articles and streams, including monetized ones.
