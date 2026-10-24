@@ -89,19 +89,18 @@ GAMES = [
   dict(
     slug="robosquare-recharged", title="RoboSquare: Recharged", app="4088870",
     art="robosquare-recharged.jpg", featured=True,
-    status=("now", "Coming Q1 2027"),
-    meta="PC, Steam &middot; $5.99 USD &middot; Not Early Access",
+    status=("now", "Coming March 4, 2027"),
+    meta="PC, Steam &middot; $15.99 USD &middot; Not Early Access",
     blurb="An online multiplayer party game about hovering robots and the appalling things they "
           "do to each other. Sixteen players, five randomly chosen minigames back to back, and "
           "every round pays into your bot's vault. The biggest vault after five rounds wins.",
-    # Arenas: 17 in the rotation (MinigameMapsConfig), checked 2026-10-14. Six more are built
-    # but wait on the developer's playtest; BRAND.md says keep quoting 17 until they are kept.
-    facts=[("Release", "<b>Q1 2027</b>"), ("Price", "<b>$5.99 USD</b>, premium, not Early Access"),
+    # Arenas: 23 in the rotation (MinigameMapsConfig), kept by the developer 2026-10-22 (BRAND.md §1).
+    facts=[("Release", "<b>March 4, 2027</b>"), ("Price", "<b>$15.99 USD</b>, premium, not Early Access"),
            ("Platform", "PC (Windows, Steam)"), ("Players", "Up to 16 online"),
            ("Modes", "5: Delivery Race, Vault Raid, Heist, Hold The Bag, Capture the Core"),
            ("Scoring", "Money. Everything a bot earns goes into its vault, which carries through "
                        "the whole match. The biggest vault after five rounds wins."),
-           ("Arenas", "17 across the five modes"),
+           ("Arenas", "23 across the five modes"),
            ("Chaos events", "8, fired mid-round without warning"),
            ("Engine", "Unity with Photon Quantum 3 deterministic rollback netcode"),
            ("Input", "Full controller support (Xbox, DualShock, DualSense) and keyboard"),
