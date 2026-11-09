@@ -139,6 +139,13 @@ tbody th{font-family:var(--f-mono);font-size:12px;font-weight:400;color:var(--mu
   white-space:nowrap;letter-spacing:.02em}
 td{color:var(--ink)}
 td b{font-weight:600}
+/* long-text tables (the privacy policy): rows stack on a phone instead of scrolling sideways */
+.table-stack table{min-width:0}
+@media(max-width:600px){
+  .table-stack thead{display:none}
+  .table-stack tr{display:block;padding:12px 0;border-bottom:1px solid var(--line-soft)}
+  .table-stack th,.table-stack td{display:block;border:0;padding:3px 0}
+}
 
 /* ---------- feature and asset lists ---------- */
 .bullets{list-style:none;padding:0;display:flex;flex-direction:column;gap:11px;max-width:66ch}
